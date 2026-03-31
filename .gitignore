@@ -1,0 +1,22 @@
+# 华仔音乐盒
+# Python
+*.pyc
+__pycache__/
+*.spec
+build/
+dist/
+bin/
+*.egg-info/
+
+# Kivy/Buildozer
+.buildozer/
+*.apk
+*.aab
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

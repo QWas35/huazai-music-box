@@ -1,0 +1,58 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install Buildozer and dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install buildozer cython
+        pip install "kivy[base]"
+    
+    - name: Build APK
+      run: |
+        buildozer android debug
+      env:
+        BUILDOZER_WARN_ON_ROOT: 1
+    
+    - name: Rename APK with version
+      run: |
+        cd bin
+        for file in *.apk; do
+          mv "$file" "华仔音乐盒_v3.5_$(date +%Y%m%d).apk"
+        done
+    
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: huazaimusicbox-apk
+        path: bin/*.apk
+        retention-days: 30
+    
+    - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v3.5-${{ github.run_number }}
+        name: 华仔音乐盒 v3.5 Android
+        files: bin/*.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
