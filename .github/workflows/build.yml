@@ -1,34 +1,31 @@
 name: Build Android APK
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
       
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      
-      - name: Install dependencies
+      - name: Set up Docker
         run: |
-          pip install --upgrade pip
-          pip install buildozer cython==0.29.36
+          sudo apt-get update
+          sudo apt-get install -y docker.io
       
-      - name: Build with Buildozer
+      - name: Build APK with Docker
         run: |
-          buildozer android debug
-        env:
-          BUILDOZER_WARN_ON_ROOT: '1'
+          docker run --rm -v "${{ github.workspace }}:/app" -w /app ubuntu:22.04 sh -c "
+            apt-get update && apt-get install -y python3 python3-pip git curl wget unzip openjdk-17-jdk &&
+            pip3 install buildozer &&
+            buildozer android debug
+          "
       
       - name: Upload APK
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: huazaimusicbox
           path: bin/*.apk
